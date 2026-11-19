@@ -1,0 +1,32 @@
+# Dependencies and package-manager/bootstrap caches
+node_modules/
+.pnpm-store/
+.tools/
+.cache/
+package-lock.json
+yarn.lock
+
+# Build and generated client
+.next/
+out/
+dist/
+src/generated/prisma/
+*.tsbuildinfo
+next-env.d.ts
+
+# Secrets: example is the only permitted environment file
+.env*
+!.env.example
+*.pem
+*.key
+
+# Test outputs and local tooling
+coverage/
+playwright-report/
+test-results/
+blob-report/
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

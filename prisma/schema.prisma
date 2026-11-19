@@ -1,0 +1,157 @@
+// Task 005 identity only. No migration has been applied.
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               String               @id
+  name             String
+  email            String               @unique
+  emailVerified    Boolean              @default(false)
+  image            String?
+  createdAt        DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime             @updatedAt @db.Timestamptz(3)
+  twoFactorEnabled Boolean              @default(false)
+  platformRole     String?
+  sessions         Session[]
+  accounts         Account[]
+  members          Member[]
+  invitations      Invitation[]
+  twoFactors       TwoFactor[]
+  auditEvents      IdentityAuditEvent[]
+}
+
+model Session {
+  id                   String        @id
+  token                String        @unique
+  expiresAt            DateTime      @db.Timestamptz(3)
+  createdAt            DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime      @updatedAt @db.Timestamptz(3)
+  ipAddress            String?
+  userAgent            String?
+  userId               String
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activeOrganizationId String?
+  activeOrganization   Organization? @relation(fields: [activeOrganizationId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([activeOrganizationId])
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime? @db.Timestamptz(3)
+  refreshTokenExpiresAt DateTime? @db.Timestamptz(3)
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime  @updatedAt @db.Timestamptz(3)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([identifier])
+}
+
+model Organization {
+  id          String               @id
+  name        String
+  slug        String               @unique
+  logo        String?
+  metadata    String?
+  createdAt   DateTime             @default(now()) @db.Timestamptz(3)
+  members     Member[]
+  invitations Invitation[]
+  sessions    Session[]
+  auditEvents IdentityAuditEvent[]
+}
+
+// Better Auth organization plugin's Member is the single membership system.
+model Member {
+  id             String       @id
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Restrict)
+  role           String
+  createdAt      DateTime     @default(now()) @db.Timestamptz(3)
+  revokedAt      DateTime?    @db.Timestamptz(3)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+}
+
+model Invitation {
+  id             String       @id
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  email          String
+  role           String?
+  status         String       @default("pending")
+  expiresAt      DateTime     @db.Timestamptz(3)
+  createdAt      DateTime     @default(now()) @db.Timestamptz(3)
+  inviterId      String
+  inviter        User         @relation(fields: [inviterId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, email, status])
+  @@index([inviterId])
+}
+
+model TwoFactor {
+  id                      String    @id
+  secret                  String
+  backupCodes             String
+  userId                  String
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verified                Boolean   @default(true)
+  failedVerificationCount Int       @default(0)
+  lockedUntil             DateTime? @db.Timestamptz(3)
+
+  @@index([userId])
+  @@index([secret])
+}
+
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+}
+
+model IdentityAuditEvent {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  actorId        String
+  actor          User         @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  action         String
+  targetId       String
+  previousRole   String?
+  nextRole       String?
+  createdAt      DateTime     @default(now()) @db.Timestamptz(3)
+
+  @@index([organizationId, createdAt])
+  @@index([actorId])
+}

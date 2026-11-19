@@ -1,0 +1,55 @@
+name: Foundation checks
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: foundation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Local-only placeholder. Generate/validate/build never connect to a DB.
+      DATABASE_URL: postgresql://plazahub:plazahub_local_only@127.0.0.1:5432/plazahub_dev
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require reviewed dependency lock
+        run: |
+          if [ ! -f pnpm-lock.yaml ]; then
+            echo "::error::Dependencies were blocked in the authoring environment. Generate and review pnpm-lock.yaml with pnpm install before this CI can run."
+            exit 1
+          fi
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.16.1
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.15.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm db:validate
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm test:foundation
+      - run: pnpm build
+      - run: pnpm exec playwright install --with-deps chromium webkit
+      - run: pnpm test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-failure-evidence
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 7

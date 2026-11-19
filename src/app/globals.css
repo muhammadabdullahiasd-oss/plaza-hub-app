@@ -1,0 +1,68 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+:root {
+  color-scheme: light;
+  --background: #f7f9fa;
+  --foreground: #142c40;
+  --card: #ffffff;
+  --card-foreground: #142c40;
+  --popover: #ffffff;
+  --popover-foreground: #142c40;
+  --primary: #142c40;
+  --primary-foreground: #ffffff;
+  --secondary: #eaf4f2;
+  --secondary-foreground: #125c55;
+  --muted: #edf1f4;
+  --muted-foreground: #52616c;
+  --accent: #14776b;
+  --accent-foreground: #ffffff;
+  --destructive: #b42318;
+  --border: #d5dfe4;
+  --input: #a3b2bc;
+  --ring: #14776b;
+  --radius: 0.75rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-sans: Arial, Helvetica, sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground font-sans antialiased; }
+  a, button { -webkit-tap-highlight-color: transparent; }
+  :focus-visible { outline: 3px solid var(--ring); outline-offset: 4px; }
+  ::selection { background: #c6e9e2; color: #142c40; }
+}
+
+/* Do not hide overflow globally: the mobile test must reveal layout mistakes. */
+.page-container { width: min(100% - 2rem, 72rem); margin-inline: auto; }
+@media (min-width: 640px) {
+  .page-container { width: min(100% - 4rem, 72rem); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+}

@@ -1,0 +1,53 @@
+# PlazaHub engineering instructions
+
+## Authority and current stage
+
+- The canonical product documents are in root [docs/](docs/README.md). Read [PRD](docs/PRD.md), [ROADMAP](docs/ROADMAP.md), [DECISIONS](docs/DECISIONS.md), [SRS](docs/SRS.md) and relevant module specifications before work.
+- Root planning copies and PlazaHub_Product_Plan/docs/ are preserved historical sources. Do not update them as ongoing specifications or delete originals/archives without approval.
+- Task 002 is documentation only. Its completion is not authorization to initialize Git, install dependencies, scaffold Next.js, write application code, create migrations or deploy. Await a subsequent task authorizing implementation.
+- Preserve existing requirement/decision IDs and priorities. The SRS elaborates the PRD; it cannot silently change scope. Resolve conflicts through an explicit recorded decision.
+- Never invent business decisions or treat proposed defaults as founder-approved. Respect BLOCKED/PROVISIONAL markers and [OPEN_QUESTIONS](docs/OPEN_QUESTIONS.md). Record founder answers with owner/date/scope and update affected specifications before implementing dependent behavior.
+
+## Approved stack and service boundaries
+
+- Use Next.js, TypeScript, PostgreSQL, Prisma, Tailwind CSS and shadcn/ui. Tenant access is a mobile-first, installable PWA that works without installation.
+- Use a modular monolith with explicit services for identity/organizations, property, leasing, billing, payments, expenses, reporting, imports, files and audit.
+- Keep route handlers/server actions/UI components thin. Business invariants belong in module services; shared calculations must not be duplicated between UI, jobs, reports and exports.
+- Access Prisma through server-only module/data boundaries. Do not expose raw database models, credentials or private storage keys to clients.
+- Provider, runtime/library version and infrastructure choices are not implicitly approved by the stack list. Consult the task and documented technical decisions before introducing dependencies or services.
+
+## Coding and data standards (for later authorized implementation)
+
+- Use strict TypeScript, explicit domain types and validated input at trust boundaries; avoid untyped escape hatches. Keep errors actionable without disclosing protected records.
+- Use exact NGN arithmetic; never floating-point currency math. Store timestamps as UTC instants and interpret business dates in Africa/Lagos. Preserve date-only semantics for due/lease dates.
+- Enforce organization-scoped foreign references, immutable invoice snapshots and auditable financial corrections. Never silently rewrite issued amounts or delete verified payment history.
+- Distinguish PaymentClaim from VerifiedPayment, allocations, reversals and receipts. Pending claims never reduce balances or count as collected funds.
+- Commit financial writes and required audit events atomically. Use database-backed idempotency, concurrency checks and balance constraints. UI button disabling is not duplicate protection.
+- Do not hold database transactions open for external bank checks, file transfers or PDF rendering. Post-commit work must be safely retryable without repeating financial effects.
+- Keep migrations reviewable and history-preserving when separately authorized. Do not create speculative tables/features for later roadmap releases.
+
+## Security and privacy
+
+- Enforce server-side identity, active membership, action, plaza and tenant-resource checks on every read/write, job, search, report, export and file download. Client organization IDs never prove authority.
+- Deny by default. Keep each role attached to its granted scope; context switching cannot merge privileges. Recheck revoked access on subsequent requests and job/download execution.
+- Platform Admin has no routine customer financial or attachment access. Exceptional support access stays disabled until an explicit, limited, expiring, audited process is approved.
+- Keep object storage private and authorize attachment class as well as parent record. Never commit secrets, production personal data or payment evidence. Avoid sensitive payloads in logs/audit summaries.
+- Private financial responses must not be cached by default in service workers, browser persistent storage, CDNs or shared server caches. Offline views must not present stale balances as current.
+- Preserve audit attribution when users, memberships or units are deactivated. Retention and deletion require approved policy, not invented retention periods.
+
+## Testing and release evidence
+
+- Trace tests to requirement IDs and approved business examples. Add meaningful calculation/state/permission tests rather than tests that merely mirror implementation.
+- Use real PostgreSQL integration tests for organization constraints, lease overlap, verification races, allocation limits, idempotency and correction/audit atomicity.
+- Include negative tests across at least two organizations, plazas, tenants and files; cover exports, jobs, role changes and revoked access as well as CRUD.
+- Verify dashboard/drill-down/export reconciliation with the same date basis and cutoff. Test partial payments, pending claims, surplus and reversals.
+- Test tenant primary tasks at 360–430px and on representative Android/iPhone devices. Verify keyboard access, focus, labels, contrast, installability, offline states and logout/context-switch privacy.
+- Production launch requires the PRD P0 acceptance gates, monitored failures and a demonstrated non-production database/private-file restore. Record limitations; never claim tests passed if they were not run.
+
+## Scope control, destructive actions and reporting
+
+- Perform only the authorized task. Gateways, maintenance, metering, automated SaaS subscriptions and other deferred roadmap work need explicit scope authorization.
+- Obtain explicit human approval before destructive database or infrastructure changes, including dropping/truncating data, irreversible migrations, deleting storage, destroying environments or overwriting a live database during restore. Prepare the concrete change, impact and recovery plan for review first. Approval for a feature is not blanket approval for destructive operations.
+- Preserve unrelated user files and existing archives. Do not initialize Git, install packages or change infrastructure merely to complete documentation tasks.
+- Summarize files changed, requirement coverage, checks actually performed, unresolved decisions and limitations. Identify newly discovered gaps without renumbering existing decisions or silently approving defaults.
+- Stop at the requested task boundary; propose subsequent work without performing it unless authorized.
